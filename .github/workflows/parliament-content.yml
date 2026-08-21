@@ -82,6 +82,7 @@ jobs:
           python - <<'PY'
           import csv
           from pathlib import Path
+          csv.field_size_limit(int(1e7))
           p=Path('data/sprs_official_report_sections.csv')
           if p.exists():
               with p.open(encoding='utf-8-sig', newline='') as f:
@@ -90,6 +91,7 @@ jobs:
               for r in rows[:2]:
                   print({'sitting_date':r.get('sitting_date',''),'title':r.get('title',''),'content_chars':len(r.get('content_text',''))})
           PY
+
 
       - name: Upload CSV results
         if: always()
