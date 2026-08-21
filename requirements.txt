@@ -1,0 +1,5 @@
+beautifulsoup4>=4.12,<5
+lxml>=5,<7
+pdfplumber>=0.11,<1
+playwright>=1.46,<2
+requests>=2.32,<3

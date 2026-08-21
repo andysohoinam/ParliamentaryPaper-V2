@@ -1,0 +1,105 @@
+name: Fresh Parliament and SPRS CSV Crawl
+
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "Which sites to crawl"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - order_paper
+          - official_report
+      parliament_limit:
+        description: "Number of Parliament PDFs to process (1 for test; 0 = all discovered)"
+        required: true
+        default: "1"
+      parliament_pages:
+        description: "Number of Parliament listing pages to scan"
+        required: true
+        default: "1"
+      sprs_dates:
+        description: "SPRS sitting dates, comma-separated DD-MM-YYYY"
+        required: true
+        default: "08-04-2026"
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Verify crawler
+        run: |
+          python -m py_compile crawler_fresh_csv.py
+          test -f crawler_fresh_csv.py
+
+      - name: Crawl both websites from scratch
+        run: |
+          mkdir -p data
+          python crawler_fresh_csv.py \
+            --source "${{ inputs.source }}" \
+            --parliament-pages "${{ inputs.parliament_pages }}" \
+            --parliament-limit "${{ inputs.parliament_limit }}" \
+            --sprs-dates "${{ inputs.sprs_dates }}" \
+            --output-dir data \
+            --timeout 90
+
+      - name: Show results
+        if: always()
+        run: |
+          echo "=== SUMMARY ==="
+          cat data/crawl_summary.json 2>/dev/null || true
+          echo "=== FILES ==="
+          find data -maxdepth 2 -type f -printf '%p (%s bytes)\n' | sort || true
+          echo "=== PARLIAMENT SAMPLE ==="
+          python - <<'PY'
+          import csv
+          from pathlib import Path
+          p=Path('data/parliament_order_papers.csv')
+          if p.exists():
+              with p.open(encoding='utf-8-sig', newline='') as f:
+                  rows=list(csv.DictReader(f))
+              print('rows:', len(rows))
+              for r in rows[:3]:
+                  print({k:r.get(k,'') for k in ('title','document_url','download_status','page_count','content_chars','error')})
+          PY
+          echo "=== SPRS SAMPLE ==="
+          python - <<'PY'
+          import csv
+          from pathlib import Path
+          p=Path('data/sprs_official_report_sections.csv')
+          if p.exists():
+              with p.open(encoding='utf-8-sig', newline='') as f:
+                  rows=list(csv.DictReader(f))
+              print('rows:', len(rows))
+              for r in rows[:2]:
+                  print({'sitting_date':r.get('sitting_date',''),'title':r.get('title',''),'content_chars':len(r.get('content_text',''))})
+          PY
+
+      - name: Upload CSV results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fresh-parliament-sprs-csv
+          path: |
+            data/parliament_order_papers.csv
+            data/sprs_official_report_sections.csv
+            data/crawl_status.csv
+            data/crawl_summary.json
+            data/pdfs/
+          if-no-files-found: warn
