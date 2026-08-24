@@ -45,8 +45,8 @@ jobs:
 
       - name: Verify crawler
         run: |
-          python -m py_compile crawler_fresh_csv.py
-          test -f crawler_fresh_csv.py
+          python -m py_compile crawler_fixed_csv.py
+          test -f crawler_fixed_csv.py
 
       - name: Crawl both websites from scratch
         run: |
