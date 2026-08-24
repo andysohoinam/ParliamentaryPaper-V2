@@ -45,13 +45,13 @@ jobs:
 
       - name: Verify crawler
         run: |
-          python -m py_compile crawler_fixed_csv.py
-          test -f crawler_fixed_csv.py
+          python -m py_compile crawler_fresh_csv.py
+          test -f crawler_fresh_csv.py
 
       - name: Crawl both websites from scratch
         run: |
           mkdir -p data
-          python crawler_fixed_csv.py \
+          python crawler_fresh_csv.py \
             --source "${{ inputs.source }}" \
             --parliament-pages "${{ inputs.parliament_pages }}" \
             --parliament-limit "${{ inputs.parliament_limit }}" \
