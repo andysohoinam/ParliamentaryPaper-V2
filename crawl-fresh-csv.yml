@@ -51,7 +51,7 @@ jobs:
       - name: Crawl both websites from scratch
         run: |
           mkdir -p data
-          python crawler_fresh_csv.py \
+          python crawler_fixed_csv.py \
             --source "${{ inputs.source }}" \
             --parliament-pages "${{ inputs.parliament_pages }}" \
             --parliament-limit "${{ inputs.parliament_limit }}" \
