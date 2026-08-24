@@ -244,32 +244,17 @@ def write_csv(path: Path, rows: list[dict[str, Any]], fields: list[str]) -> None
 
 
 def find_section_list(payload: Any) -> list[dict[str, Any]]:
-    """
-    Recursively search for sections in SPRS API response.
-    Handles multiple possible key names and nested structures.
-    """
     if isinstance(payload, dict):
-        # Try common key variations for sections
-        for key in ("takesSectionVOList", "takesSectionVoList", "sectionList", "sections", "data", "content"):
-            value = payload.get(key)
-            if isinstance(value, list) and value:
-                sections = [x for x in value if isinstance(x, dict)]
-                if sections:
-                    return sections
-        
-        # If no direct match, recursively search all values
-        for key, value in payload.items():
-            found = find_section_list(value)
-            if found:
-                return found
-                
+        for key in ("takesSectionVOList", "takesSectionVoList", "sectionList"):
+            value=payload.get(key)
+            if isinstance(value, list): return [x for x in value if isinstance(x, dict)]
+        for value in payload.values():
+            found=find_section_list(value)
+            if found: return found
     elif isinstance(payload, list):
-        # Check if any item in list contains sections
-        for item in payload:
-            found = find_section_list(item)
-            if found:
-                return found
-    
+        for value in payload:
+            found=find_section_list(value)
+            if found: return found
     return []
 
 
@@ -284,7 +269,7 @@ def sprs_rows(payload: dict[str, Any], report_url: str) -> list[dict[str, Any]]:
     rows=[]
     for sec in find_section_list(payload):
         rows.append({
-            "parliament_no": meta.get("parlimentNO", "") or meta.get("parliamentNO", ""),
+            "parliament_no": meta.get("parlimentNO", ""),
             "session_no": meta.get("sessionNO", ""),
             "volume_no": meta.get("volumeNO", ""),
             "sitting_no": meta.get("sittingNO", ""),
