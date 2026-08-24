@@ -327,7 +327,7 @@ def main() -> int:
         dates=[x.strip() for x in a.sprs_dates.split(',') if x.strip()]
         sprs, statuses=crawl_sprs(s, dates, a.timeout, not a.no_browser, a.headed); all_status.extend(statuses)
     write_csv(out/"parliament_order_papers.csv", parliament, [
-        "document_type","title","sitting_date","parliament","document_url","listing_url","listing_page",
+        "document_type","title","document_url","listing_url","listing_page",
         "pdf_url_used","download_method","download_status","download_bytes","page_count","content_chars","content_text","local_pdf_path","error"
     ])
     write_csv(out/"sprs_official_report_sections.csv", sprs, [
